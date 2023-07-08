@@ -19,18 +19,19 @@ def get_results(df_data, cancer_type, k=0, j=50):
     #    patient_list = df_data[0].value_counts()[k+22:j].index.tolist()
     #else:
     #    patient_list = df_data[0].value_counts()[k:j].index.tolist()
-
+    # Get top k to J patients with the most mutations
     patient_list = df_data[0].value_counts()[k:j].index.tolist()
 
     counter = len(patient_list)
     if not os.path.exists('Correct_'+cancer_type):
         os.makedirs('Correct_'+cancer_type)
-
+    #initial the dictionary
     PLVD = {} ### create dictionary to save the predicted lambda values
     PLVD_new = {}
 
-    for patient_id in patient_list:
+    for patient_id in patient_list:# iterate with patient.
         print("now is the patient_{}!".format(patient_id))
+        # create file to save the results and figures
         if not os.path.exists('Correct_' + cancer_type + '/{}'.format(patient_id)):
             os.makedirs('Correct_' + cancer_type + '/{}'.format(patient_id))
 
@@ -41,11 +42,11 @@ def get_results(df_data, cancer_type, k=0, j=50):
         path_2 = 'Correct_' + cancer_type
         path_3 = 'Correct_' + cancer_type + '/new_{}'.format(patient_id)
 
-        df_1 = df_data[(df_data[0]==patient_id) & (df_data[1]=='subs')]
+        df_1 = df_data[(df_data[0]==patient_id) & (df_data[1]=='subs')] # get the data with only substitution mutations
         df_sort = df_1.sort_values(by=[3])
         distance, df_bucket = window_sliding(df_1,2,3,4,50000000,7000000,autosomal=False)
         threshold_list = {k: [] for k in distance.keys()}
-        for c in tqdm.tqdm(distance.keys()):
+        for c in tqdm.tqdm(distance.keys()): #iterate by chromosome
             for i in range(0, 29):
                 threshold_can, dict_can = maxlikelihood(distance[c], i, range(3000, 10000, 100))
                 threshold_list[c] = threshold_list[c] + [int(threshold_can)]
@@ -123,6 +124,7 @@ def get_results(df_data, cancer_type, k=0, j=50):
         P = locals()
         pos_chr = {}
         max_length = 0
+        # align the position of each chromosome and add all chromosome sequentially for 1 to 23
         for c in distance.keys():
             pos_chr[c] = {}
             pos_chr[c]['min'] = df_1[3][df_1[2] == c].min()
@@ -197,7 +199,7 @@ def get_results(df_data, cancer_type, k=0, j=50):
         x_green_1 = df_k[(df_k[6]=='A')&(df_k[5]=='C')][3]
         y_green_1 = df_k[(df_k[6]=='A')&(df_k[5]=='C')]['distance']
 
-
+        # now plot the mutation graph!
         plt.figure(figsize=(15,6))
         plt.scatter(x_bule,y_bule,c='blue',label='C>A')
         plt.scatter(x_black,y_black,c='black',label='C>G')
